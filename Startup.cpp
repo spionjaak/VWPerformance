@@ -2,6 +2,8 @@
 
 #include "Display.h"
 
+#include "Config.h"
+
 void Startup_Boot()
 {
     Display_ShowLogo();
@@ -23,7 +25,7 @@ void Startup_Connected()
 
 void Startup_Error()
 {
-    Display_ShowMessage("Connection Failed");
+    Display_ShowMessage("Connection Failed",COLOR_RED);
 
     delay(2000);
 }

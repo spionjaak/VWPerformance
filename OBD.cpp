@@ -22,8 +22,9 @@ static BLERemoteCharacteristic* pTX = nullptr;
 
 static bool connected = false;
 
-static unsigned long lastRequest = 0;
-static uint8_t requestState = 0;
+static unsigned long lastRPMRequest = 0;
+static unsigned long lastTempRequest = 0;
+static unsigned long lastBatteryRequest = 0;
 
 //==================================================
 // CALLBACK
@@ -163,51 +164,55 @@ void OBD_Update()
     if(!connected)
         return;
 
-    if(millis()-lastRequest < 300)
-        return;
+    unsigned long now = millis();
 
-    switch(requestState)
+    //==============================
+    // RPM (80 ms)
+    //==============================
+
+    if(now - lastRPMRequest >= 80)
     {
-        case 0:
+        uint8_t cmd[] =
         {
-            uint8_t cmd[] =
-            {
-                0x30,0x31,0x30,0x43,0x0D
-            };
+            0x30,0x31,0x30,0x43,0x0D
+        };
 
-            pTX->writeValue(cmd,sizeof(cmd),true);
-            break;
-        }
+        pTX->writeValue(cmd,sizeof(cmd),true);
 
-        case 1:
-        {
-            uint8_t cmd[] =
-            {
-                0x30,0x31,0x30,0x35,0x0D
-            };
-
-            pTX->writeValue(cmd,sizeof(cmd),true);
-            break;
-        }
-
-        case 2:
-        {
-            uint8_t cmd[] =
-            {
-                0x41,0x54,0x52,0x56,0x0D
-            };
-
-            pTX->writeValue(cmd,sizeof(cmd),true);
-            break;
-        }
+        lastRPMRequest = now;
     }
 
-    requestState++;
+    //==============================
+    // Coolant Temp (2 s)
+    //==============================
 
-    if(requestState > 2)
-        requestState = 0;
+    if(now - lastTempRequest >= 2000)
+    {
+        uint8_t cmd[] =
+        {
+            0x30,0x31,0x30,0x35,0x0D
+        };
 
-    lastRequest = millis();
+        pTX->writeValue(cmd,sizeof(cmd),true);
+
+        lastTempRequest = now;
+    }
+
+    //==============================
+    // Battery (5 s)
+    //==============================
+
+    if(now - lastBatteryRequest >= 5000)
+    {
+        uint8_t cmd[] =
+        {
+            0x41,0x54,0x52,0x56,0x0D
+        };
+
+        pTX->writeValue(cmd,sizeof(cmd),true);
+
+        lastBatteryRequest = now;
+    }
 }
 
 //==================================================

@@ -2,6 +2,14 @@
 
 A custom ESP32-based performance display for Volkswagen vehicles using BLE OBD-II.
 
+
+## Development Status
+
+Current Version
+
+V1.0.1
+
+
 ## Features
 
 - BLE connection to ELM327

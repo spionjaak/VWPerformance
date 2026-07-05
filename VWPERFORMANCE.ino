@@ -25,7 +25,7 @@ void setup()
 
         while(true)
         {
-            delay(100);
+            delay(1000);
         }
     }
 }

@@ -13,87 +13,163 @@ static uint16_t rpmColor = COLOR_GREEN;
 
 static void drawHeader()
 {
-    tft.setTextColor(COLOR_TEXT);
-    tft.setTextSize(2);
-
-    tft.setCursor(10,20);
-    tft.print("VW PERFORMANCE");
-
-    tft.drawLine(
+    // Clear header area
+    tft.fillRect(
         0,
-        50,
+        0,
         SCREEN_WIDTH,
-        50,
+        40,
+        COLOR_BACKGROUND
+    );
+
+    tft.setTextSize(2);
+    tft.setTextColor(COLOR_TEXT);
+
+    const char* title = "VW PERFORMANCE";
+
+    int16_t x1;
+    int16_t y1;
+
+    uint16_t w;
+    uint16_t h;
+
+    tft.getTextBounds(
+        title,
+        0,
+        0,
+        &x1,
+        &y1,
+        &w,
+        &h
+    );
+
+    int x =
+        (SCREEN_WIDTH - w) / 2;
+
+    tft.setCursor(
+        x,
+        12
+    );
+
+    tft.print(title);
+
+    tft.drawFastHLine(
+        10,
+        38,
+        SCREEN_WIDTH - 20,
         COLOR_RED
     );
 }
 
 static void drawRPMBar()
 {
-    tft.fillRect(
-        BAR_X,
-        BAR_Y,
-        SCREEN_WIDTH,
-        BAR_SEGMENT_HEIGHT,
-        COLOR_BACKGROUND
+    const int startX = 20;
+    const int startY = 55;
+
+    const int segments = 20;
+
+    const int segmentWidth = 12;
+    const int segmentHeight = 18;
+
+    const int gap = 2;
+
+    int activeSegments = map(
+        vehicle.rpm,
+        0,
+        MAX_RPM,
+        0,
+        segments
     );
 
-    int activeSegments =
-        map(
-            vehicle.rpm,
-            0,
-            MAX_RPM,
-            0,
-            BAR_SEGMENTS
-        );
-
-    rpmColor = COLOR_GREEN;
-
-    for(int i=0;i<activeSegments;i++)
+    for(int i = 0; i < segments; i++)
     {
-        if(i < BAR_GREEN_LIMIT)
-            rpmColor = COLOR_GREEN;
-        else if(i < BAR_YELLOW_LIMIT)
-            rpmColor = COLOR_YELLOW;
-        else
-            rpmColor = COLOR_RED;
+        uint16_t color = ILI9341_DARKGREY;
 
-        int x =
-            BAR_X +
-            i*(BAR_SEGMENT_WIDTH+BAR_GAP);
+        if(i < activeSegments)
+        {
+            if(i < 12)
+                color = COLOR_GREEN;
+            else if(i < 16)
+                color = COLOR_YELLOW;
+            else
+                color = COLOR_RED;
+        }
 
-        tft.fillRect(
+        int x = startX + i * (segmentWidth + gap);
+
+        tft.fillRoundRect(
             x,
-            BAR_Y,
-            BAR_SEGMENT_WIDTH,
-            BAR_SEGMENT_HEIGHT,
-            rpmColor
+            startY,
+            segmentWidth,
+            segmentHeight,
+            2,
+            color
         );
     }
 }
 
 static void drawRPMText()
 {
+    // Očisti područje RPM vrijednosti
     tft.fillRect(
         0,
-        110,
+        85,
         SCREEN_WIDTH,
-        45,
+        80,
         COLOR_BACKGROUND
     );
 
-    tft.setTextSize(5);
-    tft.setTextColor(rpmColor);
+    // Pretvori RPM u tekst
+    String rpmString = String(vehicle.rpm);
 
-    tft.setCursor(20,120);
-    tft.print(vehicle.rpm);
+    // Izračunaj širinu teksta za centriranje
+    int16_t x1, y1;
+    uint16_t w, h;
+
+    tft.setTextSize(6);
+
+    tft.getTextBounds(
+        rpmString,
+        0,
+        0,
+        &x1,
+        &y1,
+        &w,
+        &h
+    );
+
+    int rpmX = (SCREEN_WIDTH - w) / 2;
+
+    // Veliki RPM broj
+    tft.setCursor(rpmX, 90);
+    tft.setTextColor(rpmColor);
+    tft.print(rpmString);
+
+    // RPM natpis
+    const char* label = "RPM";
 
     tft.setTextSize(2);
-    tft.print(" rpm");
+
+    tft.getTextBounds(
+        label,
+        0,
+        0,
+        &x1,
+        &y1,
+        &w,
+        &h
+    );
+
+    int labelX = (SCREEN_WIDTH - w) / 2;
+
+    tft.setCursor(labelX, 145);
+    tft.setTextColor(COLOR_TEXT);
+    tft.print(label);
 }
 
 static void drawInfo()
 {
+    // Očisti donji dio
     tft.fillRect(
         0,
         170,
@@ -102,33 +178,90 @@ static void drawInfo()
         COLOR_BACKGROUND
     );
 
+    // Gornja linija
+    tft.drawFastHLine(
+        10,
+        170,
+        SCREEN_WIDTH - 20,
+        ILI9341_DARKGREY
+    );
+
+    // ====== TEMP TITLE ======
+
     tft.setTextSize(2);
     tft.setTextColor(COLOR_INFO);
 
-    tft.setCursor(20,180);
+    tft.setCursor(30, 182);
+    tft.print("TEMP");
+
+    // ====== BAT TITLE ======
+
+    tft.setCursor(215, 182);
+    tft.print("BAT");
+
+    // ====== VALUES ======
+
+    tft.setTextSize(3);
+    tft.setTextColor(COLOR_TEXT);
+
+    // TEMP
+    tft.setCursor(25, 205);
 
     if(vehicle.tempValid)
     {
-        tft.print("TEMP: ");
         tft.print(vehicle.coolantTemp);
-        tft.print(" C");
+        tft.print((char)247);   // °
+        tft.print("C");
     }
     else
     {
-        tft.print("TEMP: --");
+        tft.print("--");
     }
 
-    tft.setCursor(20,210);
+    // BAT
+    tft.setCursor(190, 205);
 
     if(vehicle.batteryValid)
     {
-        tft.print("BAT: ");
         tft.print(vehicle.batteryVoltage,1);
-        tft.print(" V");
+        tft.print("V");
     }
     else
     {
-        tft.print("BAT: --.-V");
+        tft.print("--.-");
+    }
+}
+
+static void drawLoadingDots(uint8_t activeDot)
+{
+    const int centerX = SCREEN_WIDTH / 2;
+    const int y = 212;
+
+    const int spacing = 18;
+    const int radius = 4;
+
+    for(int i = 0; i < 3; i++)
+    {
+        int x = centerX - spacing + i * spacing;
+
+        if(i == activeDot)
+        {
+            tft.fillCircle(
+                x,
+                y,
+                radius,
+                COLOR_TEXT
+            );
+        }
+        else
+        {
+            tft.drawCircle(
+                x,
+                y,
+                radius,
+                ILI9341_DARKGREY
+            );
+        }
     }
 }
 
@@ -154,15 +287,51 @@ void Display_ShowLogo()
 {
     Display_Clear();
 
+    // Gornja linija
+    tft.drawFastHLine(
+        20,
+        35,
+        SCREEN_WIDTH - 40,
+        ILI9341_DARKGREY
+    );
+
+    // VW
+
     tft.setTextColor(COLOR_TEXT);
 
     tft.setTextSize(5);
-    tft.setCursor(105,60);
-    tft.print("VW");
+
+    const char* vw = "VW";
+
+    int16_t x1,y1;
+    uint16_t w,h;
+
+    tft.getTextBounds(vw,0,0,&x1,&y1,&w,&h);
+
+    tft.setCursor((SCREEN_WIDTH-w)/2,55);
+
+    tft.print(vw);
+
+    // PERFORMANCE
 
     tft.setTextSize(3);
-    tft.setCursor(45,130);
-    tft.print("PERFORMANCE");
+
+    const char* perf = "PERFORMANCE";
+
+    tft.getTextBounds(perf,0,0,&x1,&y1,&w,&h);
+
+    tft.setCursor((SCREEN_WIDTH-w)/2,120);
+
+    tft.print(perf);
+
+    // Donja linija
+
+    tft.drawFastHLine(
+        20,
+        165,
+        SCREEN_WIDTH - 40,
+        ILI9341_DARKGREY
+    );
 }
 
 void Display_ShowConnecting()
@@ -170,9 +339,49 @@ void Display_ShowConnecting()
     Display_ShowLogo();
 
     tft.setTextSize(2);
+    tft.setTextColor(COLOR_TEXT);
 
-    tft.setCursor(85,190);
-    tft.print("Connecting...");
+    const char* text = "Connecting";
+
+    int16_t x1, y1;
+    uint16_t w, h;
+
+    tft.getTextBounds(
+        text,
+        0,
+        0,
+        &x1,
+        &y1,
+        &w,
+        &h
+    );
+
+    tft.setCursor(
+        (SCREEN_WIDTH - w) / 2,
+        182
+    );
+
+    tft.print(text);
+
+    drawLoadingDots(0);
+}
+
+void Display_UpdateConnecting()
+{
+    static uint8_t dot = 0;
+    static unsigned long lastUpdate = 0;
+
+    if(millis() - lastUpdate < 250)
+        return;
+
+    lastUpdate = millis();
+
+    drawLoadingDots(dot);
+
+    dot++;
+
+    if(dot >= 3)
+        dot = 0;
 }
 
 void Display_ShowConnected()
@@ -186,20 +395,23 @@ void Display_ShowConnected()
     tft.print("Connected");
 }
 
-void Display_ShowMessage(const char* message)
+void Display_ShowMessage(const char* message,uint16_t color)
 {
-    tft.fillRect(
+   tft.fillRect(
         0,
-        190,
+        170,
         SCREEN_WIDTH,
-        30,
+        70,
         COLOR_BACKGROUND
     );
 
-    tft.setTextSize(2);
-    tft.setTextColor(COLOR_TEXT);
 
-    tft.setCursor(20,190);
+
+
+    tft.setTextSize(2);
+    tft.setTextColor(color);
+
+    tft.setCursor(50,190);
     tft.print(message);
 }
 

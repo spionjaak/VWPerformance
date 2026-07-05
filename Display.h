@@ -22,9 +22,11 @@ void Display_ShowLogo();
 
 void Display_ShowConnecting();
 
+void Display_UpdateConnecting();
+
 void Display_ShowConnected();
 
-void Display_ShowMessage(const char* message);
+void Display_ShowMessage(const char* message,uint16_t color);
 
 //=============================
 // PERFORMANCE SCREEN
