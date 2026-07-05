@@ -3,12 +3,6 @@
 A custom ESP32-based performance display for Volkswagen vehicles using BLE OBD-II.
 
 
-## Development Status
-
-Current Version
-
-V1.0.1
-
 
 ## Features
 
@@ -48,7 +42,7 @@ VWPerformance/
 
 ## Current Version
 
-**V1.0.0**
+**V1.0.1**
 
 ### Implemented
 
