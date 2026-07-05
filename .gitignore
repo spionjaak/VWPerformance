@@ -1,0 +1,11 @@
+*.bin
+*.elf
+*.map
+*.partitions.bin
+*.bootloader.bin
+
+.vscode/
+
+build/
+
+*.tmp
