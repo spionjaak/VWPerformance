@@ -265,6 +265,29 @@ static void drawLoadingDots(uint8_t activeDot)
     }
 }
 
+static void drawLogo()
+{
+    int16_t x1, y1;
+    uint16_t w, h;
+
+    tft.setTextColor(COLOR_TEXT);
+    tft.setTextSize(5);
+
+    const char* vw = "VW";
+
+    tft.getTextBounds(vw, 0, 0, &x1, &y1, &w, &h);
+    tft.setCursor((SCREEN_WIDTH - w) / 2, 55);
+    tft.print(vw);
+
+    tft.setTextSize(2);
+
+    const char* title = "VW PERFORMANCE";
+
+    tft.getTextBounds(title, 0, 0, &x1, &y1, &w, &h);
+    tft.setCursor((SCREEN_WIDTH - w) / 2, 120);
+    tft.print(title);
+}
+
 //====================================
 // PUBLIC FUNCTIONS
 //====================================
@@ -287,56 +310,25 @@ void Display_ShowLogo()
 {
     Display_Clear();
 
-    // Gornja linija
-    tft.drawFastHLine(
-        20,
-        35,
-        SCREEN_WIDTH - 40,
-        ILI9341_DARKGREY
-    );
+    drawLogo();
 
-    // VW
+    int16_t x1, y1;
+    uint16_t w, h;
 
-    tft.setTextColor(COLOR_TEXT);
+    tft.setTextColor(ILI9341_DARKGREY);
+    tft.setTextSize(2);
 
-    tft.setTextSize(5);
+    tft.getTextBounds(FW_VERSION, 0, 0, &x1, &y1, &w, &h);
 
-    const char* vw = "VW";
+    tft.setCursor((SCREEN_WIDTH - w) / 2, 195);
 
-    int16_t x1,y1;
-    uint16_t w,h;
-
-    tft.getTextBounds(vw,0,0,&x1,&y1,&w,&h);
-
-    tft.setCursor((SCREEN_WIDTH-w)/2,55);
-
-    tft.print(vw);
-
-    // PERFORMANCE
-
-    tft.setTextSize(3);
-
-    const char* perf = "PERFORMANCE";
-
-    tft.getTextBounds(perf,0,0,&x1,&y1,&w,&h);
-
-    tft.setCursor((SCREEN_WIDTH-w)/2,120);
-
-    tft.print(perf);
-
-    // Donja linija
-
-    tft.drawFastHLine(
-        20,
-        165,
-        SCREEN_WIDTH - 40,
-        ILI9341_DARKGREY
-    );
+    tft.print(FW_VERSION);
 }
 
 void Display_ShowConnecting()
 {
-    Display_ShowLogo();
+    Display_Clear();
+    drawLogo();
 
     tft.setTextSize(2);
     tft.setTextColor(COLOR_TEXT);
@@ -386,7 +378,7 @@ void Display_UpdateConnecting()
 
 void Display_ShowConnected()
 {
-    Display_ShowLogo();
+    drawLogo();
 
     tft.setTextSize(2);
 
