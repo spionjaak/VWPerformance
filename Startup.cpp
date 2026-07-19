@@ -25,7 +25,7 @@ void Startup_Connected()
 
 void Startup_Error()
 {
-    Display_ShowMessage("Connection Failed",COLOR_RED);
+    Display_ShowError();
 
     delay(2000);
 }

@@ -28,6 +28,8 @@ void Display_ShowConnected();
 
 void Display_ShowMessage(const char* message,uint16_t color);
 
+void Display_ShowError();
+
 //=============================
 // PERFORMANCE SCREEN
 //=============================

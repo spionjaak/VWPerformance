@@ -3,6 +3,20 @@
 
 All notable changes to this project will be documented here.
 
+## 1.0.2
+
+### Added
+- Boot screen
+- Connecting screen
+- Connected screen
+- Error screen
+- Bitmap icon support
+
+### Changed
+- Redesigned startup UI
+- Refactored startup rendering
+- Improved display layout
+
 ---
 
 ## V1.0.1

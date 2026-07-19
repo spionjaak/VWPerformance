@@ -1,5 +1,5 @@
 #include "Display.h"
-
+#include "Logos.h"
 #include "Config.h"
 #include "VehicleData.h"
 
@@ -288,6 +288,29 @@ static void drawLogo()
     tft.print(title);
 }
 
+static void drawCheckMark()
+{
+   tft.drawBitmap(
+    140,
+    160,
+    checkMark,
+    32,
+    32,
+    COLOR_GREEN
+);
+}
+
+static void drawWarningMark()
+{
+ tft.drawBitmap(
+        144,
+        145,
+        warningMark,
+        32,
+        32,
+        COLOR_RED
+    );
+}
 //====================================
 // PUBLIC FUNCTIONS
 //====================================
@@ -315,7 +338,7 @@ void Display_ShowLogo()
     int16_t x1, y1;
     uint16_t w, h;
 
-    tft.setTextColor(ILI9341_DARKGREY);
+    tft.setTextColor(COLOR_DARKGREY);
     tft.setTextSize(2);
 
     tft.getTextBounds(FW_VERSION, 0, 0, &x1, &y1, &w, &h);
@@ -378,13 +401,54 @@ void Display_UpdateConnecting()
 
 void Display_ShowConnected()
 {
+    Display_Clear();
+
     drawLogo();
 
-    tft.setTextSize(2);
+    drawCheckMark();
 
-    tft.setCursor(95,190);
+    tft.setTextSize(2);
     tft.setTextColor(COLOR_GREEN);
-    tft.print("Connected");
+
+    const char* text = "Connected";
+
+    int16_t x1, y1;
+    uint16_t w, h;
+
+    tft.getTextBounds(text, 0, 0, &x1, &y1, &w, &h);
+
+    tft.setCursor((SCREEN_WIDTH - w) / 2, 200);
+    tft.print(text);
+}
+
+void Display_ShowError()
+{
+    Display_Clear();
+
+    drawLogo();
+    drawWarningMark();
+
+    tft.setTextSize(2);
+    tft.setTextColor(COLOR_RED);
+
+    const char* text = "Connection Failed";
+
+    int16_t x1, y1;
+    uint16_t w, h;
+
+    tft.getTextBounds(text, 0, 0, &x1, &y1, &w, &h);
+
+    tft.setCursor((SCREEN_WIDTH - w) / 2, 190);
+    tft.print(text);
+
+    tft.setTextSize(1);
+    tft.setTextColor(COLOR_LIGHTGREY);
+
+    const char* text2 = "Check OBD Adapter";
+
+    tft.getTextBounds(text2, 0, 0, &x1, &y1, &w, &h);
+    tft.setCursor((SCREEN_WIDTH - w) / 2, 215);
+    tft.print(text2);
 }
 
 void Display_ShowMessage(const char* message,uint16_t color)
