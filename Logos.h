@@ -5,6 +5,8 @@
 
 extern const unsigned char checkMark[];
 extern const unsigned char warningMark[];
+extern const unsigned char tempIcon[];
+extern const unsigned char batteryIcon[];
 
 
 #endif

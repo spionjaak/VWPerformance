@@ -3,13 +3,73 @@
 #include "Config.h"
 #include "VehicleData.h"
 
+static uint16_t rpmColor = COLOR_GREEN;
+
+static float displayedRPM = 0;
+
+static int stableRPM = 0;
+
+static int lastRPM = -1;
+static int lastRPMX = 0;
+static uint16_t lastRPMWidth = 0;
+
 Adafruit_ILI9341 tft(TFT_CS, TFT_DC, TFT_RST);
 
 //====================================
 // PRIVATE FUNCTIONS
 //====================================
 
-static uint16_t rpmColor = COLOR_GREEN;
+
+static void updateDisplayedRPM()
+{
+    // Ako se RPM promijenio više od 10,
+    // postavi novi cilj
+    if(abs(vehicle.rpm - stableRPM) >= 10)
+    {
+        stableRPM = vehicle.rpm;
+    }
+
+    float difference =
+        stableRPM - displayedRPM;
+
+    float absoluteDifference =
+        abs(difference);
+
+    // Gotovo ista vrijednost
+    if(absoluteDifference < 5)
+    {
+        displayedRPM = stableRPM;
+        return;
+    }
+
+    float speed;
+
+    // Velika promjena - brzo reagiraj
+    if(absoluteDifference > 1500)
+    {
+        speed = 0.70f;
+    }
+
+    // Srednja promjena
+    else if(absoluteDifference > 500)
+    {
+        speed = 0.50f;
+    }
+
+    // Manja promjena
+    else if(absoluteDifference > 150)
+    {
+        speed = 0.35f;
+    }
+
+    // Sitna promjena
+    else
+    {
+        speed = 0.20f;
+    }
+
+    displayedRPM += difference * speed;
+}
 
 static void drawHeader()
 {
@@ -74,7 +134,7 @@ static void drawRPMBar()
     const int gap = 2;
 
     int activeSegments = map(
-        vehicle.rpm,
+        (int)displayedRPM,
         0,
         MAX_RPM,
         0,
@@ -110,19 +170,27 @@ static void drawRPMBar()
 
 static void drawRPMText()
 {
-    // Očisti područje RPM vrijednosti
-    tft.fillRect(
-        0,
-        85,
-        SCREEN_WIDTH,
-        80,
-        COLOR_BACKGROUND
-    );
+    int currentRPM = (int)displayedRPM;
 
-    // Pretvori RPM u tekst
-    String rpmString = String(vehicle.rpm);
+    
+    if(currentRPM == lastRPM)
+        return;
 
-    // Izračunaj širinu teksta za centriranje
+    
+    if(lastRPM != -1)
+    {
+        tft.fillRect(
+            lastRPMX,
+            90,
+            lastRPMWidth,
+            50,
+            COLOR_BACKGROUND
+        );
+    }
+
+    // Novi RPM tekst
+    String rpmString = String(currentRPM);
+
     int16_t x1, y1;
     uint16_t w, h;
 
@@ -140,31 +208,15 @@ static void drawRPMText()
 
     int rpmX = (SCREEN_WIDTH - w) / 2;
 
-    // Veliki RPM broj
+    // Nacrtaj novi RPM
     tft.setCursor(rpmX, 90);
     tft.setTextColor(rpmColor);
     tft.print(rpmString);
 
-    // RPM natpis
-    const char* label = "RPM";
-
-    tft.setTextSize(2);
-
-    tft.getTextBounds(
-        label,
-        0,
-        0,
-        &x1,
-        &y1,
-        &w,
-        &h
-    );
-
-    int labelX = (SCREEN_WIDTH - w) / 2;
-
-    tft.setCursor(labelX, 145);
-    tft.setTextColor(COLOR_TEXT);
-    tft.print(label);
+    // Spremi podatke za sljedeći put
+    lastRPM = currentRPM;
+    lastRPMX = rpmX;
+    lastRPMWidth = w;
 }
 
 static void drawInfo()
@@ -178,7 +230,7 @@ static void drawInfo()
         COLOR_BACKGROUND
     );
 
-    // Gornja linija
+    // Gornja separator linija
     tft.drawFastHLine(
         10,
         170,
@@ -186,48 +238,60 @@ static void drawInfo()
         ILI9341_DARKGREY
     );
 
-    // ====== TEMP TITLE ======
+    // ==================================
+    // TEMPERATURE
+    // ==================================
 
-    tft.setTextSize(2);
-    tft.setTextColor(COLOR_INFO);
-
-    tft.setCursor(30, 182);
-    tft.print("TEMP");
-
-    // ====== BAT TITLE ======
-
-    tft.setCursor(215, 182);
-    tft.print("BAT");
-
-    // ====== VALUES ======
+    tft.drawBitmap(
+        25,
+        190,
+        tempIcon,
+        32,
+        32,
+        COLOR_INFO
+    );
 
     tft.setTextSize(3);
     tft.setTextColor(COLOR_TEXT);
 
-    // TEMP
-    tft.setCursor(25, 205);
-
     if(vehicle.tempValid)
     {
+        tft.setCursor(65, 198);
         tft.print(vehicle.coolantTemp);
-        tft.print((char)247);   // °
+        tft.print((char)247);
         tft.print("C");
     }
     else
     {
+        tft.setCursor(65, 198);
         tft.print("--");
     }
 
-    // BAT
-    tft.setCursor(190, 205);
+    // ==================================
+    // BATTERY
+    // ==================================
+
+    tft.drawBitmap(
+        180,
+        190,
+        batteryIcon,
+        32,
+        32,
+        COLOR_INFO
+    );
+
+    tft.setTextSize(3);
+    tft.setTextColor(COLOR_TEXT);
 
     if(vehicle.batteryValid)
     {
-        tft.print(vehicle.batteryVoltage,1);
+        tft.setCursor(220, 198);
+        tft.print(vehicle.batteryVoltage, 1);
         tft.print("V");
     }
     else
     {
+        tft.setCursor(220, 198);
         tft.print("--.-");
     }
 }
@@ -486,6 +550,7 @@ void Display_DrawPerformanceScreen()
 
 void Display_UpdateRPM()
 {
+    updateDisplayedRPM();
     drawRPMBar();
     drawRPMText();
 }
